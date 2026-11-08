@@ -24,9 +24,16 @@ concurrency:
 
 jobs:
   build:
-    # Set the repository variable BUILD_RUNNER to a Blacksmith runner (e.g.
-    # blacksmith-4vcpu-ubuntu-2404) to build there; falls back to GitHub's
-    # runner so this workflow works before Blacksmith is connected.
+    # Builds on GitHub's own runners. Set the repository variable BUILD_RUNNER
+    # to override, which is the whole switch needed to move to faster runners
+    # later.
+    #
+    # Blacksmith is organisation-only and refuses personal accounts, so it is
+    # not usable while these repos live under viswanathsaj. If they ever move
+    # to the makingway org, install the Blacksmith app there and set
+    # BUILD_RUNNER to e.g. blacksmith-4vcpu-ubuntu-2404; optionally swap
+    # docker/build-push-action for useblacksmith/build-push-action to get
+    # their layer cache. Nothing here is built for that org yet.
     runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
 
     permissions:
