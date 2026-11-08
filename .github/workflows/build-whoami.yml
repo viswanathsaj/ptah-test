@@ -1,0 +1,66 @@
+# Builds ghcr.io/viswanathsaj/whoami and moves the :dev tag.
+#
+# Runs only when something that affects this service changes, per the contract
+# ("only when a push to dev touches that service"). ptah never builds; it pulls
+# what this produces.
+#
+# workflow_dispatch is here on purpose: running it by hand rebuilds and moves
+# :dev with NO new commit on dev, which is the only way to exercise
+# force_image_pull honestly.
+name: build whoami
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - Dockerfile
+      - deploy/whoami/**
+      - .github/workflows/build-whoami.yml
+  workflow_dispatch:
+
+concurrency:
+  group: build-whoami-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Set the repository variable BUILD_RUNNER to a Blacksmith runner (e.g.
+    # blacksmith-4vcpu-ubuntu-2404) to build there; falls back to GitHub's
+    # runner so this workflow works before Blacksmith is connected.
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
+
+    permissions:
+      contents: read
+      packages: write   # pushing to GHCR needs no PAT; GITHUB_TOKEN suffices
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            BUILD_ID=${{ github.run_id }}-${{ github.run_attempt }}
+          tags: |
+            ghcr.io/viswanathsaj/whoami:dev
+            ghcr.io/viswanathsaj/whoami:sha-${{ github.sha }}
+          # provenance off: an attestation manifest turns the tag into a
+          # multi-manifest index and makes digest comparison harder to read.
+          provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: report the digest ptah should converge on
+        run: |
+          echo "pushed digest: ${{ steps.build.outputs.digest }}"
+          echo "prod pin:      ghcr.io/viswanathsaj/whoami:sha-${{ github.sha }}@${{ steps.build.outputs.digest }}"

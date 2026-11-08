@@ -10,7 +10,7 @@ networks:
 
 services:
   whoami:
-    image: traefik/whoami:v1.10.3
+    image: ghcr.io/viswanathsaj/whoami:dev
     networks: [traefik]
     restart: unless-stopped
     labels:
