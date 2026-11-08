@@ -1,4 +1,4 @@
-# Dev copy of the whoami test service. NetBird-only at test.int.viswanathsaj.com.
+# Dev copy of the whoami test service. NetBird-only at whoami.dev.viswanathsaj.com.
 #
 # Deployed by doco-cd as project "whoami-dev" from the dev branch, with
 # force_image_pull, so a moved :dev tag redeploys without a new commit.
@@ -16,7 +16,7 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: "traefik"
-      traefik.http.routers.whoami-dev.rule: "Host(`test.int.viswanathsaj.com`)"
+      traefik.http.routers.whoami-dev.rule: "Host(`whoami.dev.viswanathsaj.com`)"
       traefik.http.routers.whoami-dev.entrypoints: "websecure"
       # Mandatory. Traefik also answers on ptah's public IP, so without this
       # the dev copy is reachable from the internet. No certresolver here: the
