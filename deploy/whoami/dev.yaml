@@ -1,0 +1,25 @@
+# Dev copy of the whoami test service. NetBird-only at test.int.viswanathsaj.com.
+#
+# Deployed by doco-cd as project "whoami-dev" from the dev branch, with
+# force_image_pull, so a moved :dev tag redeploys without a new commit.
+# The project name, branch and this file path are fixed in Nix on ptah
+# (hosts/ptah/doco-cd.nix) and cannot be changed from this repository.
+networks:
+  traefik:
+    external: true
+
+services:
+  whoami:
+    image: traefik/whoami:v1.10.3
+    networks: [traefik]
+    restart: unless-stopped
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "traefik"
+      traefik.http.routers.whoami-dev.rule: "Host(`test.int.viswanathsaj.com`)"
+      traefik.http.routers.whoami-dev.entrypoints: "websecure"
+      # Mandatory. Traefik also answers on ptah's public IP, so without this
+      # the dev copy is reachable from the internet. No certresolver here: the
+      # websecure default certificate is the *.int wildcard.
+      traefik.http.routers.whoami-dev.middlewares: "netbird-only@file"
+      traefik.http.services.whoami-dev.loadbalancer.server.port: "80"

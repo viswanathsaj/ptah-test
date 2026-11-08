@@ -1,0 +1,22 @@
+# Production copy of the whoami test service, on its public domain.
+#
+# Deployed by doco-cd as project "whoami-prod" from main. The image is pinned
+# by digest: only a merge from dev to main changes what production runs.
+networks:
+  traefik:
+    external: true
+
+services:
+  whoami:
+    image: traefik/whoami:v1.10.3@sha256:43a68d10b9dfcfc3ffbfe4dd42100dc9aeaf29b3a5636c856337a5940f1b4f1c
+    networks: [traefik]
+    restart: unless-stopped
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "traefik"
+      traefik.http.routers.whoami-prod.rule: "Host(`test.viswanathsaj.com`)"
+      traefik.http.routers.whoami-prod.entrypoints: "websecure"
+      # Production names the resolver so it gets a certificate for its own
+      # domain rather than the internal wildcard. No netbird-only.
+      traefik.http.routers.whoami-prod.tls.certresolver: "letsencrypt"
+      traefik.http.services.whoami-prod.loadbalancer.server.port: "80"
